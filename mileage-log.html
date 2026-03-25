@@ -411,14 +411,35 @@
 
     .btn-bar { display: none !important; }
 
-    .preamble { background: #f0f3fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .trip-ref { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table.main-grid thead tr:first-child th { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table.main-grid thead tr:last-child th { background: var(--mid) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table.main-grid td.ind-cell { background: #dce3f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table.main-grid tbody tr:nth-child(even) td { background: #f4f6fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .summary-header { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .sum-trip-num { background: var(--mid) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    /* Grayscale-friendly print colours — no large dark fills */
+    .preamble { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .trip-ref {
+      background: #f0f0f0 !important; color: #111 !important;
+      border: 1px solid #aaa !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .trip-ref-item strong { color: #111 !important; }
+
+    table.main-grid thead tr:first-child th {
+      background: #d8d8d8 !important; color: #111 !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    table.main-grid thead tr:last-child th {
+      background: #ebebeb !important; color: #111 !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    table.main-grid td.ind-cell { background: #e4e4e4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    table.main-grid tbody tr:nth-child(even) td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .summary-header {
+      background: #d8d8d8 !important; color: #111 !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .sum-trip-num {
+      background: #e4e4e4 !important; color: #111 !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
 
     .doc-header { padding-bottom: 4px; margin-bottom: 4px; }
     .doc-header h1 { font-size: 13pt; }
@@ -430,6 +451,9 @@
     table.main-grid thead th { padding: 1px 2px; line-height: 1.2; }
     table.main-grid tbody tr { height: 12px; }
     table.main-grid tbody td { padding: 0 2px; }
+
+    /* Hide unchecked checkboxes in print */
+    input[type=checkbox]:not(:checked):not(.month-cb) { visibility: hidden; }
 
     /* Hide placeholder text and empty input hints in print */
     input::placeholder { color: transparent !important; }
