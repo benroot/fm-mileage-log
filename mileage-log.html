@@ -355,9 +355,22 @@
 
   /* ── BUTTONS ── */
   .btn-bar {
-    display: flex; gap: 8px; justify-content: center;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
     margin-top: 12px;
   }
+  .btn-bar-secondary {
+    display: flex; gap: 6px; justify-content: center;
+    width: 100%; margin-top: 4px;
+  }
+  .btn-secondary {
+    padding: 3px 10px;
+    border: 1px solid #aaa; border-radius: 3px;
+    background: #f0f0f0; color: #555;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 7.5pt; font-weight: 400;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-secondary:hover { background: #e0e0e0; }
   .btn {
     padding: 6px 16px;
     border: none; border-radius: 3px;
@@ -648,6 +661,11 @@
     <button class="btn btn-clear" onclick="clearGrid()">🗑 Clear All Checkboxes</button>
     <button class="btn" style="background:#6c757d;color:white;" onclick="newForm()">📄 New Form</button>
     <button class="btn btn-print" onclick="window.print()">🖨 Print / Save PDF</button>
+    <div class="btn-bar-secondary">
+      <button class="btn-secondary" onclick="exportJSON()">⬇ Export Data</button>
+      <button class="btn-secondary" onclick="document.getElementById('import-file').click()">⬆ Import Data</button>
+      <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importJSON(this)">
+    </div>
   </div>
 
 </div><!-- end page 2 -->
@@ -864,6 +882,103 @@ function clearGrid() {
   updateSummary();
   saveState();
 }
+
+function exportJSON() {
+  const sigData = document.getElementById('sig-img').src;
+  const data = {
+    name:      document.getElementById('f-name').value,
+    empid:     document.getElementById('f-empid').value,
+    addr:      document.getElementById('f-addr').value,
+    rotation:  document.getElementById('f-rotation').value,
+    year:      '26',
+    date:      document.getElementById('f-date').value,
+    months:    [...document.querySelectorAll('.month-cb:checked')].map(c => c.value),
+    grid:      grid,
+    signature: sigData && sigData.startsWith('data:') ? sigData : null
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const month = data.months[0] || 'unknown';
+  a.download = `mileage-log-${month}-${data.year || ''}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let saved;
+    try { saved = JSON.parse(e.target.result); } catch { alert('Invalid JSON file — could not parse.'); return; }
+
+    // Validate: must have at least one recognizable field
+    const knownFields = ['name','empid','addr','rotation','date','months','grid','signature'];
+    const found = knownFields.filter(k => saved[k] != null);
+    if (found.length === 0) {
+      alert('This file does not appear to be a mileage log export.');
+      return;
+    }
+
+    // Build summary of what will change
+    const lines = [];
+    if (saved.name     != null) lines.push(`  Name: "${saved.name}"`);
+    if (saved.empid    != null) lines.push(`  Employee ID: "${saved.empid}"`);
+    if (saved.addr     != null) lines.push(`  Address: "${saved.addr}"`);
+    if (saved.rotation != null) lines.push(`  Rotation: "${saved.rotation}"`);
+    if (saved.date     != null) lines.push(`  Date: "${saved.date}"`);
+    if (saved.months   != null) lines.push(`  Month(s): ${saved.months.join(', ') || '(none)'}`);
+    if (saved.grid     != null) {
+      let checked = 0;
+      for (let d = 1; d <= TOTAL_DAYS; d++)
+        for (let t = 1; t <= 9; t++)
+          if (saved.grid[d] && saved.grid[d][t]) checked++;
+      lines.push(`  Mileage grid: ${checked} trip${checked !== 1 ? 's' : ''} checked`);
+    }
+    if (saved.signature) lines.push('  Signature: included');
+
+    if (!confirm('Import will overwrite the current form with the following data:\n\n' + lines.join('\n') + '\n\nContinue?')) return;
+
+    if (saved.name     != null) document.getElementById('f-name').value     = saved.name;
+    if (saved.empid    != null) document.getElementById('f-empid').value    = saved.empid;
+    if (saved.addr     != null) document.getElementById('f-addr').value     = saved.addr;
+    if (saved.rotation != null) document.getElementById('f-rotation').value = saved.rotation;
+    if (saved.date     != null) document.getElementById('f-date').value     = saved.date;
+    if (saved.signature) applySignature(saved.signature);
+    if (saved.months) {
+      document.querySelectorAll('.month-cb').forEach(cb => {
+        cb.checked = saved.months.includes(cb.value);
+      });
+    }
+    if (saved.grid) {
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        for (let t = 1; t <= 9; t++) {
+          grid[d][t] = !!(saved.grid[d] && saved.grid[d][t]);
+        }
+      }
+    }
+    updateAllIndicators();
+    updateP2Subtitle();
+    updateSummary();
+    saveState();
+  };
+  reader.readAsText(file);
+}
+
+// Drag-and-drop JSON import
+document.addEventListener('dragover', function(e) {
+  const hasFile = e.dataTransfer.types.includes('Files');
+  if (hasFile) e.preventDefault();
+});
+document.addEventListener('drop', function(e) {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.json') && file.type !== 'application/json') return;
+  e.preventDefault();
+  importJSON({ files: [file], value: '' });
+});
 
 // Month: single-select
 document.querySelectorAll('.month-cb').forEach(cb => {
