@@ -658,8 +658,9 @@
   </div>
 
   <div class="btn-bar">
-    <button class="btn btn-clear" onclick="clearGrid()">🗑 Clear All Checkboxes</button>
-    <button class="btn" style="background:#6c757d;color:white;" onclick="newForm()">📄 New Form</button>
+    <button class="btn btn-clear" onclick="clearGrid()">🗑 Reset Trips</button>
+    <button class="btn" style="background:#6c757d;color:white;" onclick="newForm()">📄 Clear All Data</button>
+    <button class="btn" id="btn-undo" style="background:#6f42c1;color:white;" onclick="undo()" disabled>↩ Undo</button>
     <button class="btn btn-print" onclick="window.print()">🖨 Print / Save PDF</button>
     <div class="btn-bar-secondary">
       <button class="btn-secondary" onclick="exportJSON()">⬇ Export Data</button>
@@ -747,6 +748,7 @@ function buildRows() {
 //  LOGIC
 // ══════════════════════════════════════════════
 function onTripChange(day, trip, checked) {
+  pushUndo();
   if (checked) {
     // Uncheck all other trips in this row
     for (let t = 1; t <= 9; t++) {
@@ -819,6 +821,83 @@ function updateSummary() {
 }
 
 // ══════════════════════════════════════════════
+//  UNDO — sessionStorage history stack
+// ══════════════════════════════════════════════
+const UNDO_KEY = 'mileage_log_undo';
+const UNDO_LIMIT = 20;
+
+function currentSnapshot() {
+  const sigData = document.getElementById('sig-img').src;
+  return {
+    name:      document.getElementById('f-name').value,
+    empid:     document.getElementById('f-empid').value,
+    addr:      document.getElementById('f-addr').value,
+    rotation:  document.getElementById('f-rotation').value,
+    year:      '26',
+    date:      document.getElementById('f-date').value,
+    months:    [...document.querySelectorAll('.month-cb:checked')].map(c => c.value),
+    grid:      JSON.parse(JSON.stringify(grid)),
+    signature: sigData && sigData.startsWith('data:') ? sigData : null
+  };
+}
+
+function pushUndo() {
+  let stack;
+  try { stack = JSON.parse(sessionStorage.getItem(UNDO_KEY)) || []; } catch { stack = []; }
+  stack.push(currentSnapshot());
+  if (stack.length > UNDO_LIMIT) stack.shift();
+  try { sessionStorage.setItem(UNDO_KEY, JSON.stringify(stack)); } catch(e) {}
+  updateUndoButton();
+}
+
+function applySnapshot(saved) {
+  if (saved.name     != null) document.getElementById('f-name').value     = saved.name;
+  if (saved.empid    != null) document.getElementById('f-empid').value    = saved.empid;
+  if (saved.addr     != null) document.getElementById('f-addr').value     = saved.addr;
+  if (saved.rotation != null) document.getElementById('f-rotation').value = saved.rotation;
+  if (saved.date     != null) document.getElementById('f-date').value     = saved.date;
+  if (saved.signature) applySignature(saved.signature);
+  else clearSignature(null);
+  if (saved.months) {
+    document.querySelectorAll('.month-cb').forEach(cb => {
+      cb.checked = saved.months.includes(cb.value);
+    });
+  }
+  if (saved.grid) {
+    for (let d = 1; d <= TOTAL_DAYS; d++)
+      for (let t = 1; t <= 9; t++)
+        grid[d][t] = !!(saved.grid[d] && saved.grid[d][t]);
+  }
+  updateAllIndicators();
+  updateP2Subtitle();
+  updateSummary();
+  saveState();
+}
+
+function undo() {
+  let stack;
+  try { stack = JSON.parse(sessionStorage.getItem(UNDO_KEY)) || []; } catch { stack = []; }
+  if (stack.length === 0) return;
+  const snapshot = stack.pop();
+  try { sessionStorage.setItem(UNDO_KEY, JSON.stringify(stack)); } catch(e) {}
+  applySnapshot(snapshot);
+  updateUndoButton();
+}
+
+function updateUndoButton() {
+  let stack;
+  try { stack = JSON.parse(sessionStorage.getItem(UNDO_KEY)) || []; } catch { stack = []; }
+  const btn = document.getElementById('btn-undo');
+  if (btn) btn.disabled = stack.length === 0;
+}
+
+let undoDebounceTimer = null;
+function pushUndoDebounced() {
+  clearTimeout(undoDebounceTimer);
+  undoDebounceTimer = setTimeout(pushUndo, 500);
+}
+
+// ══════════════════════════════════════════════
 //  PERSISTENCE — localStorage auto-save / load
 // ══════════════════════════════════════════════
 const STORAGE_KEY = 'mileage_log_v3';
@@ -874,6 +953,7 @@ function loadState() {
 
 function clearGrid() {
   if (!confirm('Clear all checkboxes from the mileage grid?')) return;
+  pushUndo();
   for (let d = 1; d <= TOTAL_DAYS; d++)
     for (let t = 1; t <= 9; t++) grid[d][t] = false;
   document.querySelectorAll('input[type=checkbox][id^="r"]').forEach(cb => {
@@ -940,6 +1020,7 @@ function importJSON(input) {
     if (saved.signature) lines.push('  Signature: included');
 
     if (!confirm('Import will overwrite the current form with the following data:\n\n' + lines.join('\n') + '\n\nContinue?')) return;
+    pushUndo();
 
     if (saved.name     != null) document.getElementById('f-name').value     = saved.name;
     if (saved.empid    != null) document.getElementById('f-empid').value    = saved.empid;
@@ -983,6 +1064,7 @@ document.addEventListener('drop', function(e) {
 // Month: single-select
 document.querySelectorAll('.month-cb').forEach(cb => {
   cb.addEventListener('change', function() {
+    pushUndo();
     if (this.checked) {
       document.querySelectorAll('.month-cb').forEach(o => { if (o !== this) o.checked = false; });
     }
@@ -1003,9 +1085,9 @@ function updateP2Subtitle() {
   }
 }
 
-// Auto-save on every field input
+// Auto-save on every field input; debounced undo snapshot for text fields
 ['f-name','f-empid','f-addr','f-rotation','f-date'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => { updateP2Subtitle(); saveState(); });
+  document.getElementById(id).addEventListener('input', () => { updateP2Subtitle(); saveState(); pushUndoDebounced(); });
 });
 
 // Set today's date only if nothing is saved
@@ -1151,9 +1233,11 @@ const hadSaved = loadState();
 if (!hadSaved) document.getElementById('f-date').value = todayStr;
 buildRows();
 updateP2Subtitle();
+updateUndoButton();
 
 function newForm() {
   if (!confirm('Start a new form? This will clear all checkboxes and reset all fields.')) return;
+  pushUndo();
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
   // Reset fields
   document.getElementById('f-name').value = '';
