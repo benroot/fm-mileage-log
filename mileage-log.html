@@ -420,11 +420,16 @@
     .summary-header { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .sum-trip-num { background: var(--mid) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-    .doc-header { padding-bottom: 7px; margin-bottom: 7px; }
-    .preamble { margin-bottom: 7px; padding: 6px 8px; }
-    .trip-ref { margin-bottom: 7px; padding: 4px 8px; }
-    table.main-grid { font-size: 7.5pt; }
-    table.main-grid tbody tr { height: 14px; }
+    .doc-header { padding-bottom: 4px; margin-bottom: 4px; }
+    .doc-header h1 { font-size: 13pt; }
+    .preamble { margin-bottom: 4px; padding: 4px 8px; }
+    .preamble-row { gap: 6px; }
+    .trip-ref { margin-bottom: 4px; padding: 3px 6px; gap: 6px 12px; }
+    .trip-note { margin-top: 1px; }
+    table.main-grid { font-size: 7pt; }
+    table.main-grid thead th { padding: 1px 2px; line-height: 1.2; }
+    table.main-grid tbody tr { height: 12px; }
+    table.main-grid tbody td { padding: 0 2px; }
 
     /* Hide placeholder text and empty input hints in print */
     input::placeholder { color: transparent !important; }
@@ -440,7 +445,7 @@
 <body>
 
 <!-- ═══════════════════════════════════════════
-     PAGE 1 — Header + Preamble + Grid (days 1–21)
+     PAGE 1 — Header + Preamble + Full Grid (days 1–31)
 ═══════════════════════════════════════════ -->
 <div class="page" id="page1">
 
@@ -509,7 +514,7 @@
     <div class="trip-note">During elective, ONLY Continuity Clinics qualify. Rate: $0.725/mile</div>
   </div>
 
-  <!-- Main grid — Days 1–21 on page 1 -->
+  <!-- Main grid — All Days 1–31 -->
   <div class="grid-wrapper">
     <table class="main-grid" id="main-table">
       <colgroup>
@@ -545,7 +550,7 @@
         </tr>
       </thead>
       <tbody id="grid-body-1">
-        <!-- Days 1–21 injected by JS -->
+        <!-- Days 1–31 injected by JS -->
       </tbody>
     </table>
   </div>
@@ -554,48 +559,16 @@
 
 
 <!-- ═══════════════════════════════════════════
-     PAGE 2 — Days 22–31 + Summary + Signature
+     PAGE 2 — Summary + Signature
 ═══════════════════════════════════════════ -->
 <div class="page" id="page2">
 
   <div class="doc-header">
     <div>
-      <h1>Mileage Reimbursement Log 2026 <span style="font-size:10pt;font-weight:400;color:var(--muted)">— continued</span></h1>
+      <h1>Mileage Reimbursement Log 2026</h1>
       <div class="subtitle" id="p2-subtitle">University of Michigan Family Medicine Residency Program</div>
     </div>
   </div>
-
-  <table class="main-grid" style="margin-bottom:10px;">
-    <colgroup>
-      <col class="col-day"><col class="col-ind">
-      <col class="col-t1"><col class="col-t2"><col class="col-t3">
-      <col class="col-t4"><col class="col-t5"><col class="col-t6">
-      <col class="col-t7"><col class="col-t8"><col class="col-t9">
-    </colgroup>
-    <thead>
-      <tr>
-        <th rowspan="2">DAY</th>
-        <th rowspan="2">✓</th>
-        <th>Trip 1</th><th>Trip 2</th><th>Trip 3</th>
-        <th>Trip 4</th><th>Trip 5</th><th>Trip 6</th>
-        <th>Trip 7</th><th>Trip 8</th><th>Trip 9</th>
-      </tr>
-      <tr>
-        <th>CHE<br>34 mi</th>
-        <th>UM→CHE<br>→YHC→UM<br>54 mi</th>
-        <th>YHC<br>24 mi</th>
-        <th>Dexter<br>18 mi</th>
-        <th>UM→CHE<br>→Dxt→UM<br>34.5 mi</th>
-        <th>Northville<br>50 mi</th>
-        <th>Livonia<br>56 mi</th>
-        <th>Luke<br>82 mi</th>
-        <th>Flint<br>116 mi</th>
-      </tr>
-    </thead>
-    <tbody id="grid-body-2">
-      <!-- Days 22–31 injected by JS -->
-    </tbody>
-  </table>
 
   <!-- Summary -->
   <div class="summary-section">
@@ -703,9 +676,7 @@ for (let d = 1; d <= TOTAL_DAYS; d++) {
 // ══════════════════════════════════════════════
 function buildRows() {
   const body1 = document.getElementById('grid-body-1');
-  const body2 = document.getElementById('grid-body-2');
   body1.innerHTML = '';
-  body2.innerHTML = '';
 
   for (let d = 1; d <= TOTAL_DAYS; d++) {
     const tr = document.createElement('tr');
@@ -738,8 +709,7 @@ function buildRows() {
       tr.appendChild(td);
     }
 
-    if (d <= 21) body1.appendChild(tr);
-    else body2.appendChild(tr);
+    body1.appendChild(tr);
   }
 
   updateAllIndicators();
