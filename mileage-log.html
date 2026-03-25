@@ -342,7 +342,9 @@
   .sig-draw-btn.primary:hover { opacity: 0.85; }
   .sig-draw-btn.danger { background: #c0392b; color: white; border-color: #c0392b; }
   .sig-draw-btn.danger:hover { opacity: 0.85; }
-  .date-field { flex: 1; }
+  .date-field { flex: 1; display: flex; align-items: center; gap: 6px; }
+  .today-btn { font-size: 7pt; padding: 1px 6px; cursor: pointer; }
+  @media print { .today-btn { display: none !important; } }
   .footer-note {
     margin-top: 8px;
     font-size: 7pt;
@@ -634,6 +636,7 @@
       <span class="field-label">Date:</span>
       <input class="field-input" id="f-date" type="text" placeholder="MM/DD/YYYY"
              value="">
+      <button class="today-btn" onclick="document.getElementById('f-date').value=todayStr; updateP2Subtitle(); saveState();">Today</button>
     </div>
   </div>
 
