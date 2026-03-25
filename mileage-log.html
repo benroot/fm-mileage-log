@@ -1118,7 +1118,7 @@ function applySignature(dataUrl) {
 }
 
 function clearSignature(e) {
-  if (e) e.stopPropagation();
+  if (e) { e.stopPropagation(); pushUndo(); }
   const img = document.getElementById('sig-img');
   const placeholder = document.getElementById('sig-placeholder');
   img.src = '';
@@ -1147,6 +1147,7 @@ document.getElementById('sig-file-input').addEventListener('change', function() 
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, dispW * scale, dispH * scale);
+      pushUndo();
       applySignature(canvas.toDataURL('image/png'));
       saveState();
     };
@@ -1224,6 +1225,7 @@ function saveDrawnSignature() {
     return;
   }
   // Export at full canvas resolution (already 2x), then switch to upload view to show it
+  pushUndo();
   applySignature(drawCanvas.toDataURL('image/png'));
   saveState();
   setSigMode('upload'); // flip back to show the captured signature
