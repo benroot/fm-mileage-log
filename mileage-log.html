@@ -16,9 +16,12 @@
   <div id="login-card">
     <h1 id="login-title">Mileage Reimbursement Log <span>2026</span></h1>
     <p class="login-inst">University of Michigan<br>Family Medicine Residency Program</p>
-    <p class="login-intro">Sign in with your Google account to access your log.</p>
+    <p class="login-intro">Sign in to save your profile and settings across browsers and devices.</p>
     <button id="sign-in-btn" onclick="signIn()">Sign in with Google</button>
     <p id="login-error"></p>
+    <div class="login-divider"><span>or</span></div>
+    <button id="guest-btn" onclick="continueAsGuest()">Continue without signing in</button>
+    <p class="guest-hint">Your name and rate settings will be saved in this browser only.</p>
   </div>
 </div>
 
@@ -209,9 +212,13 @@
     * Mileage reimbursed at the current IRS rate of $0.725 per mile. Submit completed log to the residency program coordinator by the 5th of the following month.
   </div>
 
-  <div class="user-bar">
+  <div class="user-bar" id="user-bar-auth" style="display:none">
     Signed in as <span id="user-email"></span> &nbsp;&middot;&nbsp;
     <button class="btn-link" onclick="signOut()">Sign Out</button>
+  </div>
+  <div class="user-bar" id="user-bar-guest" style="display:none">
+    Profile saved in this browser only &nbsp;&middot;&nbsp;
+    <button class="btn-link" onclick="showLoginOverlay()">Sign in to sync</button>
   </div>
 
   <div class="readme-link" style="text-align:center; margin-top:8px; font-size:7.5pt; color:var(--muted);">

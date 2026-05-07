@@ -369,6 +369,23 @@ table.main-grid td input[type=checkbox] {
   margin-top: 14px; font-size: 8pt; color: #c0392b;
   display: none; line-height: 1.4;
 }
+.login-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0 14px; color: var(--muted); font-size: 8pt;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: #dde;
+}
+#guest-btn {
+  background: none; border: 1px solid #ccd; border-radius: 4px;
+  padding: 8px 20px; width: 100%;
+  font-family: 'Source Sans 3', sans-serif; font-size: 9.5pt;
+  color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+#guest-btn:hover { border-color: var(--navy); color: var(--navy); }
+.guest-hint {
+  font-size: 7.5pt; color: var(--muted); margin-top: 10px; line-height: 1.4;
+}
 
 /* ── USER BAR ── */
 .user-bar {

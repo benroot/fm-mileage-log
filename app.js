@@ -5,8 +5,11 @@ const SUPABASE_URL      = 'https://ncoyttqkehraxcqapqmg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable__w4yS3r9otNUYnrZQY7rjw_9Yyym3AV';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser    = null;
-let appInitialized = false;
+let currentUser      = null;
+let appInitialized   = false;
+let intentionalSignOut = false;
+const AUTH_MODE_KEY  = 'mileage_auth_mode'; // 'guest' | 'authenticated'
+let guestMode        = localStorage.getItem(AUTH_MODE_KEY) === 'guest';
 
 // ══════════════════════════════════════════════
 //  DATA
@@ -646,8 +649,36 @@ function hideLoginOverlay() {
   document.getElementById('login-overlay').style.display = 'none';
 }
 
-function showUserEmail(email) {
-  document.getElementById('user-email').textContent = email;
+function updateUserBar() {
+  const authBar  = document.getElementById('user-bar-auth');
+  const guestBar = document.getElementById('user-bar-guest');
+  if (currentUser) {
+    document.getElementById('user-email').textContent = currentUser.email;
+    authBar.style.display  = 'block';
+    guestBar.style.display = 'none';
+  } else {
+    authBar.style.display  = 'none';
+    guestBar.style.display = 'block';
+  }
+}
+
+function initAppFromLocal() {
+  appInitialized = true;
+  let local = null;
+  try { local = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch {}
+  if (local) applyStateToForm(local);
+  else document.getElementById('f-date').value = todayStr;
+  buildRows();
+  updateP2Subtitle();
+  updateUndoRedo();
+}
+
+function continueAsGuest() {
+  localStorage.setItem(AUTH_MODE_KEY, 'guest');
+  guestMode = true;
+  hideLoginOverlay();
+  updateUserBar();
+  if (!appInitialized) initAppFromLocal();
 }
 
 async function signIn() {
@@ -663,18 +694,47 @@ async function signIn() {
 
 async function signOut() {
   if (!confirm('Sign out?')) return;
+  intentionalSignOut = true;
+  localStorage.removeItem(AUTH_MODE_KEY);
+  guestMode = false;
   await sb.auth.signOut();
 }
 
 sb.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_OUT' || !session) {
+    const wasAuthenticated = currentUser !== null;
     currentUser = null;
+
+    if (intentionalSignOut) {
+      intentionalSignOut = false;
+      showLoginOverlay();
+      return;
+    }
+
+    if (wasAuthenticated) {
+      // Token expired mid-session — stay in app, switch to local-only mode
+      guestMode = true;
+      localStorage.setItem(AUTH_MODE_KEY, 'guest');
+      updateUserBar();
+      return;
+    }
+
+    if (guestMode) {
+      // Returning guest on page reload — initialize from localStorage
+      updateUserBar();
+      if (!appInitialized) initAppFromLocal();
+      return;
+    }
+
+    // Fresh load with no prior choice — show the overlay
     showLoginOverlay();
     return;
   }
 
   currentUser = session.user;
-  showUserEmail(currentUser.email);
+  guestMode = false;
+  localStorage.setItem(AUTH_MODE_KEY, 'authenticated');
+  updateUserBar();
   hideLoginOverlay();
 
   // Only initialize the app once (guards against token-refresh re-fires)
