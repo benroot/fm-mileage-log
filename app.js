@@ -294,12 +294,11 @@ function saveState() {
 }
 
 async function saveToSupabase(fields) {
-  try {
-    await sb.from('logs').upsert(
-      { user_id: currentUser.id, data: fields, updated_at: fields.updated_at },
-      { onConflict: 'user_id' }
-    );
-  } catch(e) {}
+  const { error } = await sb.from('logs').upsert(
+    { user_id: currentUser.id, data: fields, updated_at: fields.updated_at },
+    { onConflict: 'user_id' }
+  );
+  if (error) console.error('Supabase save failed:', error);
 }
 
 async function loadStateWithMerge(user) {
@@ -307,14 +306,13 @@ async function loadStateWithMerge(user) {
   try { local = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch {}
 
   let remote = null, remoteUpdatedAt = null;
-  try {
-    const { data: row } = await sb
-      .from('logs')
-      .select('data, updated_at')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (row) { remote = row.data; remoteUpdatedAt = row.updated_at; }
-  } catch {}
+  const { data: row, error: loadError } = await sb
+    .from('logs')
+    .select('data, updated_at')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (loadError) console.error('Supabase load failed:', loadError);
+  if (row) { remote = row.data; remoteUpdatedAt = row.updated_at; }
 
   if (!local && !remote) return false;
 
