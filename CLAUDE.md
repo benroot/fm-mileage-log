@@ -48,13 +48,14 @@ page (linked from the app's footer).
 - Keep edits framework-free vanilla HTML/CSS/JS consistent with the existing
   style (plain DOM APIs, no build tooling, no TypeScript).
 
-## Active refactor plan: split into index.html / styles.css / app.js
+## Active refactor plan: split into mileage-log.html / styles.css / app.js
 
-**Goal:** turn `mileage-log.html` into three files — `index.html` (markup
-only), `styles.css` (all CSS), `app.js` (all JS) — with **zero behavior or
-visual change**. This is a pure code-motion refactor, not a rewrite: no
-renaming of functions/IDs, no logic cleanup, no CSS restructuring bundled in.
-Save that kind of cleanup for a later, separately-agreed pass.
+**Goal:** turn `mileage-log.html` into three files — `mileage-log.html`
+(markup only, filename unchanged), `styles.css` (all CSS), `app.js` (all JS)
+— with **zero behavior or visual change**. This is a pure code-motion
+refactor, not a rewrite: no renaming of functions/IDs, no logic cleanup, no
+CSS restructuring bundled in. Save that kind of cleanup for a later,
+separately-agreed pass.
 
 **Ground rules for every phase below:**
 - One phase = one commit = one thing extracted. Don't combine phases.
@@ -106,26 +107,7 @@ it un-deferred and in place rather than moving it to `<head>`.
 Verify: full smoke-test checklist — this phase touches all interactive
 behavior (grid logic, undo/redo, persistence, signature, import/export).
 
-### Phase 3 — Rename `mileage-log.html` → `index.html`
-
-Before this phase: confirm with the user whether this repo is served via
-GitHub Pages. If so, adding an `index.html` at the repo root changes what
-renders at the site's root URL (GitHub Pages currently likely falls back to
-rendering `README.md` there with no `index.html` present) — that's a
-user-visible URL/behavior change worth a deliberate yes, not an assumption.
-
-Once confirmed:
-- `git mv mileage-log.html index.html`.
-- Update the link in [README.md](README.md) (`[Open the Mileage
-  Log](mileage-log.html)` → `index.html`).
-- Search the repo for any other reference to the old filename (e.g. the
-  in-app "Instructions & Help" link, if it ever gets pointed at a specific
-  file instead of `./`).
-
-Verify: smoke-test checklist again, plus confirm the README link and the
-in-app help link both resolve correctly.
-
-### Phase 4 — Documentation cleanup
+### Phase 3 — Documentation cleanup
 
 Update the ["What this project is"](#what-this-project-is) and
 ["Architecture"](#architecture) sections of this file to describe the new
