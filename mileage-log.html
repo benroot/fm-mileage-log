@@ -57,6 +57,7 @@
         <label class="month-item"><input type="checkbox" class="month-cb" value="Oct"> Oct</label>
         <label class="month-item"><input type="checkbox" class="month-cb" value="Nov"> Nov</label>
         <label class="month-item"><input type="checkbox" class="month-cb" value="Dec"> Dec</label>
+        <span class="rate-badge" id="rate-badge">Rate: $0.725/mi</span>
       </div>
       <div class="year-group">
         <span class="field-label">Year: <strong>2026</strong></span>
@@ -75,7 +76,7 @@
     <div class="trip-ref-item"><strong>7.</strong> UMHS → Livonia → UMHS = 56 mi</div>
     <div class="trip-ref-item"><strong>8.</strong> UMHS → Luke Clinic → UMHS = 82 mi</div>
     <div class="trip-ref-item"><strong>9.</strong> UMHS → Hamilton Clinic → UMHS = 116 mi</div>
-    <div class="trip-note">During elective, ONLY Continuity Clinics qualify. Rate: $0.725/mile</div>
+    <div class="trip-note">During elective, ONLY Continuity Clinics qualify. Rate: <span id="trip-rate-display">$0.725</span>/mile</div>
   </div>
 
   <!-- Main grid — All Days 1–31 -->
@@ -192,7 +193,7 @@
   </div>
 
   <div class="footer-note">
-    * Mileage reimbursed at the current IRS rate of $0.725 per mile. Submit completed log to the residency program coordinator by the 5th of the following month.
+    * Mileage reimbursed at <span id="footer-rate">$0.725</span> per mile. Submit completed log to the residency program coordinator by the 5th of the following month.
   </div>
 
   <div class="readme-link" style="text-align:center; margin-top:8px; font-size:7.5pt; color:var(--muted);">

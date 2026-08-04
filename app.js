@@ -12,7 +12,7 @@ const TRIPS = [
   { miles: 82,    label: "Luke Clinic",       short: "Luke" },
   { miles: 116,   label: "Hamilton/Flint",   short: "Flint" },
 ];
-const RATE = 0.725;
+let RATE = 0.725;
 const TOTAL_DAYS = 31;
 
 // State: grid[day][trip] = true/false (day 1-based, trip 1-based)
@@ -144,6 +144,30 @@ function updateSummary() {
 }
 
 // ══════════════════════════════════════════════
+//  RATE SELECTION — derived from the selected month
+// ══════════════════════════════════════════════
+const RATE_JAN_JUL = 0.725;
+const RATE_AUG_DEC = 0.76;
+const JAN_JUL_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+
+function getRateForMonth(month) {
+  if (!month) return RATE_JAN_JUL; // no month picked yet — default to the current rate
+  return JAN_JUL_MONTHS.includes(month) ? RATE_JAN_JUL : RATE_AUG_DEC;
+}
+
+function updateRateFromMonth() {
+  const selected = document.querySelector('.month-cb:checked');
+  RATE = getRateForMonth(selected ? selected.value : null);
+  updateRateDisplay();
+}
+
+function updateRateDisplay() {
+  document.getElementById('footer-rate').textContent = `$${RATE}`;
+  document.getElementById('trip-rate-display').textContent = `$${RATE}`;
+  document.getElementById('rate-badge').textContent = `Rate: $${RATE}/mi`;
+}
+
+// ══════════════════════════════════════════════
 //  UNDO — sessionStorage history stack
 // ══════════════════════════════════════════════
 const UNDO_KEY = 'mileage_log_undo';
@@ -189,6 +213,7 @@ function applySnapshot(saved) {
       cb.checked = saved.months.includes(cb.value);
     });
   }
+  updateRateFromMonth();
   if (saved.grid) {
     for (let d = 1; d <= TOTAL_DAYS; d++)
       for (let t = 1; t <= 9; t++)
@@ -285,6 +310,9 @@ function loadState() {
     });
   }
 
+  // Rate is derived from the selected month, not stored independently
+  updateRateFromMonth();
+
   // Restore grid state
   if (saved.grid) {
     for (let d = 1; d <= TOTAL_DAYS; d++) {
@@ -378,6 +406,7 @@ function importJSON(input) {
         cb.checked = saved.months.includes(cb.value);
       });
     }
+    updateRateFromMonth();
     if (saved.grid) {
       for (let d = 1; d <= TOTAL_DAYS; d++) {
         for (let t = 1; t <= 9; t++) {
@@ -413,7 +442,9 @@ document.querySelectorAll('.month-cb').forEach(cb => {
     if (this.checked) {
       document.querySelectorAll('.month-cb').forEach(o => { if (o !== this) o.checked = false; });
     }
+    updateRateFromMonth();
     updateP2Subtitle();
+    updateSummary();
     saveState();
   });
 });
@@ -578,6 +609,7 @@ function saveDrawnSignature() {
 
 const hadSaved = loadState();
 if (!hadSaved) document.getElementById('f-date').value = todayStr;
+updateRateFromMonth();
 buildRows();
 updateP2Subtitle();
 updateUndoRedo();
@@ -593,6 +625,7 @@ function newForm() {
   document.getElementById('f-rotation').value = '';
   document.getElementById('f-date').value = todayStr;
   document.querySelectorAll('.month-cb').forEach(cb => cb.checked = false);
+  updateRateFromMonth();
   clearSignature(null);
   clearCanvas();
   setSigMode('upload');

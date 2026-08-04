@@ -109,6 +109,21 @@ body {
   font-size: 8pt; cursor: pointer;
 }
 .month-item input[type=checkbox] { cursor: pointer; width: 11px; height: 11px; accent-color: var(--navy); }
+.rate-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--light-blue);
+  border: 1px solid var(--border);
+  color: var(--navy);
+  font-size: 7.5pt;
+  font-weight: 700;
+  white-space: nowrap;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 .year-group { display: flex; align-items: baseline; gap: 4px; }
 .year-input { width: 38px; text-align: center; }
 
