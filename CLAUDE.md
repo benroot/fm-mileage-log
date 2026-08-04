@@ -6,22 +6,23 @@ Guidance for Claude Code (or any AI assistant) working in this repository.
 
 A single-page tool that lets University of Michigan Family Medicine residency
 staff track mileage for reimbursement and print a two-page PDF form to submit.
-The whole app is one file: [mileage-log.html](mileage-log.html). There is no
-build step, no package manager, no framework, and no server — it's opened
-directly in a browser. [README.md](README.md) is the end-user instructions
-page (linked from the app's footer).
+The app is three plain files — [mileage-log.html](mileage-log.html) (markup),
+[styles.css](styles.css) (all CSS), [app.js](app.js) (all JS) — with no build
+step, no package manager, no framework, and no server. It's opened directly
+in a browser. [README.md](README.md) is the end-user instructions page
+(linked from the app's footer).
 
 ## How to work on this project
 
-- **This is a small, hand-tuned single-file app. Work incrementally.** Make
-  one focused change at a time, then stop and let the user look at it (ideally
-  in a browser) before moving to the next change. Do not bundle several
-  unrelated changes into one edit.
-- **Ask before large refactors.** Things like splitting the file into
-  separate HTML/CSS/JS files, introducing a build tool or framework,
-  renaming the storage schema, or restructuring the grid/state model are all
-  large refactors — propose the idea and get explicit go-ahead before doing
-  it. Default to editing in place within the existing single-file structure.
+- **This is a small, hand-tuned app. Work incrementally.** Make one focused
+  change at a time, then stop and let the user look at it (ideally in a
+  browser) before moving to the next change. Do not bundle several unrelated
+  changes into one edit.
+- **Ask before large refactors.** Things like introducing a build tool or
+  framework, splitting `app.js` into modules, renaming the storage schema, or
+  restructuring the grid/state model are all large refactors — propose the
+  idea and get explicit go-ahead before doing it. Default to editing in place
+  within the existing three-file structure.
 - **Visual/print layout is a first-class concern, not a detail.** The entire
   point of this app is a clean printable PDF. The form is designed to fit
   exactly on **two US Letter pages** (`@page { size: letter; margin: 0.45in }`
@@ -31,11 +32,11 @@ page (linked from the app's footer).
   onto a third page or make page 1 overflow. After any visual change, mentally
   (or actually, via the `run` skill / browser print preview) check that both
   pages still fit.
-  - There are effectively two parallel stylesheets living in one `<style>`
-    block: the on-screen styles and the `@media print` overrides near the
-    bottom. A change to spacing/sizing often needs a matching adjustment in
-    both places — the screen version and the denser print version are not
-    the same rules.
+  - `styles.css` effectively contains two parallel stylesheets: the
+    on-screen styles and the `@media print` overrides near the bottom. A
+    change to spacing/sizing often needs a matching adjustment in both
+    places — the screen version and the denser print version are not the
+    same rules.
   - Print styles intentionally avoid large dark/colorful fills (grayscale
     printer friendliness) and hide unchecked checkboxes and empty-field
     placeholders so a partially-filled form still prints clean.
@@ -48,84 +49,21 @@ page (linked from the app's footer).
 - Keep edits framework-free vanilla HTML/CSS/JS consistent with the existing
   style (plain DOM APIs, no build tooling, no TypeScript).
 
-## Active refactor plan: split into mileage-log.html / styles.css / app.js
-
-**Goal:** turn `mileage-log.html` into three files — `mileage-log.html`
-(markup only, filename unchanged), `styles.css` (all CSS), `app.js` (all JS)
-— with **zero behavior or visual change**. This is a pure code-motion
-refactor, not a rewrite: no renaming of functions/IDs, no logic cleanup, no
-CSS restructuring bundled in. Save that kind of cleanup for a later,
-separately-agreed pass.
-
-**Ground rules for every phase below:**
-- One phase = one commit = one thing extracted. Don't combine phases.
-- After each phase, stop and let the user review/test in a browser before
-  starting the next phase (see [How to work on this project](#how-to-work-on-this-project) above).
-- Because there's no test suite, verification is manual. Run the smoke-test
-  checklist below after each phase, in the browser (screen view *and* print
-  preview).
-- Do not touch trip data (`TRIPS`, `RATE`), element IDs, or the print CSS
-  rules while moving code — copy them verbatim.
-
-### Smoke-test checklist (run after every phase)
-
-- [ ] Page loads with no console errors.
-- [ ] Fill a few header fields (name, employee ID, address, rotation), pick a
-      month — page 2 subtitle updates.
-- [ ] Check a trip box on a couple of days — indicator column and page-2
-      summary totals update correctly; checking a second trip on the same
-      day unchecks the first.
-- [ ] Undo / Redo buttons work and enable/disable correctly.
-- [ ] Upload a signature image; switch to Draw mode, draw, click "Use
-      Signature"; clear signature.
-- [ ] Reload the page — auto-saved data (fields, grid, signature) restores.
-- [ ] Export Data, then Import Data (and try drag-and-drop) — confirmation
-      dialog shows correct summary, data restores.
-- [ ] Reset Trips and Clear All Data both work and ask for confirmation.
-- [ ] Print preview (Ctrl/Cmd+P): still exactly **two pages**, no
-      third-page overflow, no large dark fills, unchecked boxes hidden.
-
-### Phase 1 — Extract CSS → `styles.css`
-
-Move the entire contents of the `<style>` block (including the
-`@import url(...)` font line and the `@media print` section) verbatim into a
-new `styles.css`. Replace the `<style>...</style>` block in
-`mileage-log.html` with `<link rel="stylesheet" href="styles.css">` in the
-same place in `<head>`. No CSS content changes, no selector renaming.
-
-Verify: run the smoke-test checklist, paying closest attention to the print
-preview since layout is the highest-risk part of this move.
-
-### Phase 2 — Extract JS → `app.js`
-
-Move the entire contents of the `<script>` block verbatim into a new
-`app.js`. Replace it with `<script src="app.js"></script>` in the **same
-position** at the end of `<body>` (just before `</body>`) — the script relies
-on running after the DOM (including the static markup) has parsed, so keep
-it un-deferred and in place rather than moving it to `<head>`.
-
-Verify: full smoke-test checklist — this phase touches all interactive
-behavior (grid logic, undo/redo, persistence, signature, import/export).
-
-### Phase 3 — Documentation cleanup
-
-Update the ["What this project is"](#what-this-project-is) and
-["Architecture"](#architecture) sections of this file to describe the new
-three-file layout instead of the single-file one, then remove this "Active
-refactor plan" section (or mark it done) since it will no longer describe
-current work.
-
 ## Architecture
 
-Everything lives in `mileage-log.html`:
+Three files:
 
-- `<style>` — screen styles, then a `@media print` block with the two-page
-  print overrides described above.
-- `<body>` — two `.page` divs (`#page1`, `#page2`) that map 1:1 to the two
-  printed pages.
-- `<script>` — all app logic, no modules, top-to-bottom execution ending in
-  an init block near the bottom (`loadState()` → `buildRows()` →
-  `updateP2Subtitle()` → `updateUndoRedo()`).
+- `mileage-log.html` — markup only: two `.page` divs (`#page1`, `#page2`)
+  that map 1:1 to the two printed pages, plus a `<link rel="stylesheet"
+  href="styles.css">` in `<head>` and a `<script src="app.js"></script>` at
+  the end of `<body>`.
+- `styles.css` — screen styles, then a `@media print` block with the
+  two-page print overrides described above.
+- `app.js` — all app logic, no modules, top-to-bottom execution ending in an
+  init block near the bottom (`loadState()` → `buildRows()` →
+  `updateP2Subtitle()` → `updateUndoRedo()`). It relies on running after the
+  static markup has parsed (loaded un-deferred, at the end of `<body>`), so
+  keep it there rather than moving it to `<head>`.
 
 ### State model
 
